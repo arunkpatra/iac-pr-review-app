@@ -10,8 +10,6 @@ export class PRHandler {
         payload: any,
         githubService: GitHubPRService
     ): Promise<void> {
-
-
         // Check the action and perform the appropriate operation.
         if (payload.action === 'opened' ||
             payload.action === 'synchronize') {

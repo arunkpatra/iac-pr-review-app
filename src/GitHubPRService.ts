@@ -109,7 +109,7 @@ export class GitHubPRService implements IPRService {
         for await (const {data: files} of iterator) {
             for (const file of files) {
                 const filePath = file.filename;
-                console.log("File : %s", filePath);
+                console.log("File : %s, SHA: %s", filePath, file.sha);
 
                 const response = await octokit.pulls.createReviewComment({
                     owner: this.owner,
