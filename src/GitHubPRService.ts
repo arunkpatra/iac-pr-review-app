@@ -1,4 +1,4 @@
-import {IPRService, IReviewComment, IPlatformConfig} from './types.js';
+import {IPRService, IReviewComment, IPlatformConfig, IPullRequestFile} from './types.js';
 import {Octokit} from '@octokit/rest';
 import {InstallationTokenManager} from './InstallationTokenManager.js';
 
@@ -88,40 +88,46 @@ export class GitHubPRService implements IPRService {
    * Post a file level comment
    * @param prId
    * @param comment
-   * @param commitId
+   * @param commitId This is the HEAD sha
+   * @param filePath
    */
     async postFileLevelReviewComment(
-        prId: string,
+        prId: number,
         comment: string,
-        commitId: string
+        commitId: string,
+        filePath: string
     ): Promise<any> {
+      const octokit = await this.getOctokit();
+      console.log("Posting file-level comment for file: %s", filePath);
+
+      const response = await octokit.pulls.createReviewComment({
+          owner: this.owner,
+          repo: this.repo,
+          pull_number: prId,
+          commit_id: commitId,
+          path: filePath,
+          body: comment,
+          subject_type: 'file'
+      });
+
+      return response.data.id.toString();
+    }
+
+    async listPullRequestFiles(prId: number): Promise<IPullRequestFile[]> {
         const octokit = await this.getOctokit();
-
-        const iterator =
-            octokit.paginate.iterator(octokit.pulls.listFiles, {
-                owner: this.owner,
-                repo: this.repo,
-                pull_number: parseInt(prId, 10),
-                per_page: 100,
-            });
-
-        // iterate through each response
-        for await (const {data: files} of iterator) {
-            for (const file of files) {
-                const filePath = file.filename;
-                console.log("File : %s, SHA: %s", filePath, file.sha);
-
-                const response = await octokit.pulls.createReviewComment({
-                    owner: this.owner,
-                    repo: this.repo,
-                    pull_number: parseInt(prId, 10),
-                    commit_id: commitId,
-                    path: filePath,
-                    body: comment,
-                    subject_type: 'file'
-                });
-            }
-        }
+        const response = await octokit.pulls.listFiles({
+            owner: this.owner,
+            repo: this.repo,
+            pull_number: prId
+        });
+        return response.data.map(file => ({
+            filename: file.filename,
+            sha: file.sha,
+            status: file.status,
+            additions: file.additions,
+            deletions: file.deletions,
+            changes: file.changes
+        }));
     }
 
 }

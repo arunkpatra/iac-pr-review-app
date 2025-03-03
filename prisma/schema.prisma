@@ -9,10 +9,15 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Example model: update or add your models as needed.
-model User {
+model PRReviewComment {
   id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
+  provider  String   // e.g. "GitHub", "GitLab", etc.
+  repo      String
+  owner     String
+  filePath  String
+  fileSha   String
+  commentId String
   createdAt DateTime @default(now())
+
+  @@unique([provider, repo, owner, filePath])
 }

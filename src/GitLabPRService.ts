@@ -1,4 +1,4 @@
-import { IPRService, IReviewComment, IPlatformConfig } from './types.js';
+import {IPRService, IReviewComment, IPlatformConfig, IPullRequestFile} from './types.js';
 
 export class GitLabPRService implements IPRService {
   constructor(private config: IPlatformConfig, private projectId: string) {
@@ -14,6 +14,14 @@ export class GitLabPRService implements IPRService {
   }
 
   async deleteReviewComment(commentId: string): Promise<void> {
+    throw new Error('GitLab integration not implemented yet');
+  }
+
+  listPullRequestFiles(prId: number): Promise<IPullRequestFile[]> {
+    throw new Error('GitLab integration not implemented yet');
+  }
+
+  postFileLevelReviewComment(prId: number, comment: string, commitId: string, filePath: string): Promise<string> {
     throw new Error('GitLab integration not implemented yet');
   }
 }
