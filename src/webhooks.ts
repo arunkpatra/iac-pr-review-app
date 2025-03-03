@@ -50,16 +50,21 @@ export async function handleWebhook(req: Request, res: Response) {
         tokenManager
       );
 
+      // Immediately acknowledge the webhook
+      res.status(200).send('Webhook received');
 
-      // Test the GitHub setup by calling getZen and logging the result.
-      //const zenMessage = await githubService.getZen();
-      //console.log('GitHub Zen message:', zenMessage);
-
-      // Delegate the pull request handling logic.
-      await PRHandler.handlePullRequestEvent(payload, githubService);
-      console.log('Processed pull_request event for repo:', `${owner}/${repo}`);
+      // Process the event asynchronously
+      PRHandler.handlePullRequestEvent(payload, githubService)
+          .then(() => {
+            console.log(`Processed pull_request event for repo: ${owner}/${repo}`);
+          })
+          .catch(err => {
+            console.error('Error processing webhook event:', err);
+          });
+      return;
     }
 
+    // For other events, simply respond.
     res.status(200).send('Webhook received');
   } catch (err) {
     console.error('Webhook processing error:', err);
