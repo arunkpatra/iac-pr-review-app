@@ -23,9 +23,6 @@ ${review.summary}
 ${review.security}
 
 **Best Practices:**  
-${review.bestPractices}
-
-**Status:**  
-${review.status}`;
+${review.bestPractices}`;
     }
 }

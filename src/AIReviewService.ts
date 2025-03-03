@@ -7,6 +7,7 @@
 
 import axios from 'axios';
 import {AIReview} from "./types.js";
+import {MockAIReviewService} from "./MockAIReviewService.js";
 
 export class AIReviewService {
     /**
@@ -28,12 +29,7 @@ export class AIReviewService {
 
         if (mockReview) {
             console.log('Returning mock review for', filePath);
-            return {
-                summary: `Mock summary for ${filePath}`,
-                security: `Mock security review for ${filePath}`,
-                bestPractices: `Mock best practices for ${filePath}`,
-                status: 'Ok'
-            };
+            return MockAIReviewService.getFileReview(filePath);
         }
 
         if (!aiWorkflowUrl) {
