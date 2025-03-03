@@ -21,7 +21,7 @@ export class MockAIReviewService {
     static getFileReview(filePath: string): AIReview {
         return {
             summary: `- This template provisions AWS KMS keys and aliases alongside corresponding IAM users and policies.
-- It uses a list variable to handle multiple instances and leverages lifecycle settings (prevent_destroy) to protect critical resources from accidental deletion.`,
+               - It uses a list variable to handle multiple instances and leverages lifecycle settings (prevent_destroy) to protect critical resources from accidental deletion.`,
             security: `- Resource Protection:
 The use of prevent_destroy in the lifecycle blocks for KMS keys, aliases, and IAM users helps safeguard these critical resources from accidental deletion.
 - Policy Scoping:

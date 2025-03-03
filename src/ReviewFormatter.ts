@@ -15,14 +15,17 @@ export class ReviewFormatter {
      */
     static formatReview(review: AIReview): string {
         return `### File Review
-
-**Summary:**  
+        
+> [!NOTE]
+> **Summary:**  
 ${review.summary}
 
-**Security:**  
+> [!CAUTION]
+> **Security:**  
 ${review.security}
 
-**Best Practices:**  
+> [!IMPORTANT]
+> **Best Practices:**  
 ${review.bestPractices}`;
     }
 }
