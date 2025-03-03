@@ -29,13 +29,13 @@ import { IPRService } from './types.js';
  *
  * @param payload - The pull request event payload.
  * @param file - The file object from the pull request.
- * @param generalComment - The comment text to post/update on the file.
+ * @param commentBody - The comment text to post/update on the file.
  * @param prService - An instance of IPRService used to interact with GitHub.
  */
 async function processFile(
     payload: any,
     file: any,
-    generalComment: string,
+    commentBody: string,
     prService: IPRService
 ): Promise<void> {
     // Find the existing DB record for this file.
@@ -60,7 +60,7 @@ async function processFile(
     if (existingRecord) {
         try {
             // Attempt to update the existing GitHub comment.
-            await prService.updateReviewComment(existingRecord.commentId, generalComment);
+            await prService.updateReviewComment(existingRecord.commentId, commentBody);
             console.log(`Updated file-level comment for ${file.filename} (ID: ${existingRecord.commentId}).`);
 
             // Update the record in the database with the new SHA.
@@ -88,7 +88,7 @@ async function processFile(
     // If no record exists or update failed, post a new file-level review comment.
     const newCommentId = await prService.postFileLevelReviewComment(
         payload.pull_request.number,
-        generalComment,
+        commentBody,
         payload.pull_request.head.sha,
         file.filename
     );
