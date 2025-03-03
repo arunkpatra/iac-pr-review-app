@@ -18,27 +18,31 @@
 
 import prisma from './prismaClient.js';
 import { IPRService } from './types.js';
+import {AIReviewService} from "./AIReviewService.js";
 
 /**
  * Processes a single file within a pull request.
  *
- * This function checks if a database record exists for the file (using a composite key of provider, repo, owner, and filePath)
+ * This function first calls the external AI workflow engine to retrieve a review comment
+ * for the file. It then checks if a database record exists for the file (using a composite key of provider, repo, owner, and filePath)
  * and compares the stored SHA with the current SHA. If the file has changed, it attempts to update the existing GitHub comment.
- * If updating fails (for example, if the comment was deleted manually), it posts a new comment.
+ * If updating fails (e.g. because the comment was manually deleted on GitHub), it posts a new comment.
  * The database record is then upserted accordingly.
  *
  * @param payload - The pull request event payload.
  * @param file - The file object from the pull request.
- * @param commentBody - The comment text to post/update on the file.
  * @param prService - An instance of IPRService used to interact with GitHub.
  */
 async function processFile(
     payload: any,
     file: any,
-    commentBody: string,
     prService: IPRService
 ): Promise<void> {
-    // Find the existing DB record for this file.
+
+    // Retrieve the review comment for this file from the external AI workflow engine.
+    const reviewComment = await AIReviewService.getFileReview(file.filename);
+
+    // Look up in the DB using the composite key (provider, repo, owner, filePath).
     const existingRecord = await prisma.pRReviewComment.findUnique({
         where: {
             provider_repo_owner_filePath: {
@@ -60,7 +64,7 @@ async function processFile(
     if (existingRecord) {
         try {
             // Attempt to update the existing GitHub comment.
-            await prService.updateReviewComment(existingRecord.commentId, commentBody);
+            await prService.updateReviewComment(existingRecord.commentId, reviewComment);
             console.log(`Updated file-level comment for ${file.filename} (ID: ${existingRecord.commentId}).`);
 
             // Update the record in the database with the new SHA.
@@ -88,7 +92,7 @@ async function processFile(
     // If no record exists or update failed, post a new file-level review comment.
     const newCommentId = await prService.postFileLevelReviewComment(
         payload.pull_request.number,
-        commentBody,
+        reviewComment,
         payload.pull_request.head.sha,
         file.filename
     );
@@ -161,11 +165,9 @@ export class PRHandler {
                 return;
             }
 
-            const generalComment = 'Overall, this file looks good!';
-
             // Process each Terraform file asynchronously.
             for (const file of terraformFiles) {
-                await processFile(payload, file, generalComment, prService);
+                await processFile(payload, file, prService);
             }
         } else if (action === 'closed') {
             console.log('PR closed. No action taken.');
