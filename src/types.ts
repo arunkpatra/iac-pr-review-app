@@ -84,6 +84,28 @@ export interface IPullRequestFile {
 }
 
 /**
+ * Interface representing the review returned by the external AI workflow engine.
+ */
+export interface AIReview {
+  /** A brief summary review of the file. */
+  summary?: string;
+
+  /** Security-related review details for the file. */
+  security?: string;
+
+  /** Best practices review information for the file. */
+  bestPractices?: string;
+
+  /**
+   * Status of the review generation.
+   * Expected values:
+   * - "Ok" if the review was generated successfully.
+   * - "Error" if an error occurred during review generation.
+   */
+  status: string;
+}
+
+/**
  * Abstraction for pull request (PR) operations.
  * Provides methods to interact with pull request comments and file listings.
  */

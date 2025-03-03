@@ -19,6 +19,7 @@
 import prisma from './prismaClient.js';
 import { IPRService } from './types.js';
 import {AIReviewService} from "./AIReviewService.js";
+import {ReviewFormatter} from "./ReviewFormatter.js";
 
 /**
  * Processes a single file within a pull request.
@@ -40,7 +41,9 @@ async function processFile(
 ): Promise<void> {
 
     // Retrieve the review comment for this file from the external AI workflow engine.
-    const reviewComment = await AIReviewService.getFileReview(file.filename);
+    const aiReview = await AIReviewService.getFileReview(file.filename);
+    // Format the review as Markdown.
+    const formattedReview = ReviewFormatter.formatReview(aiReview);
 
     // Look up in the DB using the composite key (provider, repo, owner, filePath).
     const existingRecord = await prisma.pRReviewComment.findUnique({
@@ -64,7 +67,7 @@ async function processFile(
     if (existingRecord) {
         try {
             // Attempt to update the existing GitHub comment.
-            await prService.updateReviewComment(existingRecord.commentId, reviewComment);
+            await prService.updateReviewComment(existingRecord.commentId, formattedReview);
             console.log(`Updated file-level comment for ${file.filename} (ID: ${existingRecord.commentId}).`);
 
             // Update the record in the database with the new SHA.
@@ -92,7 +95,7 @@ async function processFile(
     // If no record exists or update failed, post a new file-level review comment.
     const newCommentId = await prService.postFileLevelReviewComment(
         payload.pull_request.number,
-        reviewComment,
+        formattedReview,
         payload.pull_request.head.sha,
         file.filename
     );
