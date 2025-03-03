@@ -121,17 +121,18 @@ async function processFile(
 }
 
 /**
- * Handles pull request events by processing each file in the pull request.
+ * Handles pull request events by processing each Terraform file (.tf) in the pull request.
  *
  * For 'opened' and 'synchronize' events, it:
- *  - Retrieves the list of files in the PR.
+ *  - Retrieves the list of files in the pull request.
  *  - Logs details about each file.
- *  - Processes each file using the processFile helper.
+ *  - Filters the list to only process files with a ".tf" extension.
+ *  - Processes each Terraform file using the processFile helper.
  *
  * For 'closed' events, it logs a message and takes no further action.
  *
  * @param payload - The pull request event payload.
- * @param prService - An instance of IPRService for interacting with GitHub.
+ * @param prService - An instance of IPRService for interacting with the PR provider.
  */
 export class PRHandler {
     static async handlePullRequestEvent(
@@ -153,10 +154,17 @@ export class PRHandler {
                 console.log(`Changes: ${file.changes}`);
             });
 
+            // Filter to process only Terraform (.tf) files.
+            const terraformFiles = files.filter(file => file.filename.endsWith('.tf'));
+            if (terraformFiles.length === 0) {
+                console.log("No Terraform (.tf) files found in the PR; nothing to process.");
+                return;
+            }
+
             const generalComment = 'Overall, this file looks good!';
 
-            // Process each file asynchronously.
-            for (const file of files) {
+            // Process each Terraform file asynchronously.
+            for (const file of terraformFiles) {
                 await processFile(payload, file, generalComment, prService);
             }
         } else if (action === 'closed') {
